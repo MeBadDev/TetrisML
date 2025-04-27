@@ -10,7 +10,7 @@ from tetris_ml.utils.checkpoint_manager import CheckpointManager
 
 def train_tetris_value_network(episodes=100, steps_per_episode=1000, 
                               eval_interval=10, checkpoint_interval=10,
-                              model_path="tetris_value_network", 
+                              model_path="tetris_value_network.keras", 
                               resume_training=False):
     """Train a value network for Tetris state evaluation"""
     # Create environment

@@ -148,26 +148,49 @@ class TetrisValueTrainer:
                 self.episode_lengths.append(episode_length)
                 self.episode_values.append(np.mean(episode_values) if episode_values else 0)
                 
+                # Calculate total blocks placed
+                total_blocks = sum(episode_stats['blocks_placed'].values())
+                
                 # Print episode statistics
                 print(f"\nEpisode Completed:")
-                print(f"  Lines cleared: {episode_stats['lines_cleared']}")
-                print(f"  Tetris count: {episode_stats['tetris_count']}")
-                print(f"  T-spin count: {episode_stats['tspin_count']}")
-                print(f"  Garbage sent: {episode_stats['garbage_sent']}")
-                print(f"  Max combo: {episode_stats['max_combo']}")
-                print(f"  Back-to-back count: {episode_stats['back_to_back']}")
-                print(f"  Perfect clears: {episode_stats['perfect_clears']}")
-                print(f"  Max height: {episode_stats['max_height']}")
-                print(f"  Blocks placed:")
-                total_blocks = sum(episode_stats['blocks_placed'].values())
-                for piece, count in episode_stats['blocks_placed'].items():
-                    percentage = (count / total_blocks * 100) if total_blocks > 0 else 0
-                    print(f"    {piece}: {count} ({percentage:.1f}%)")
-                print(f"  Total blocks: {total_blocks}")
-                print(f"  Episode length: {episode_length}")
-                print(f"  Total reward: {episode_reward:.2f}")
-                print(f"  Average evaluation score: {np.mean(episode_values):.4f}")
-                print(f"  Board states evaluated: {self.board_states_evaluated}")
+                print(f"  Model Performance:")
+                print(f"  - Average evaluation score: {np.mean(episode_values):.4f}")
+                print(f"  - Board evaluation loss: {self.evaluation_loss[-1] if self.evaluation_loss else 'N/A'}")
+                print(f"  - Total reward: {episode_reward:.2f}")
+                print(f"  - States evaluated: {self.board_states_evaluated}")
+                print(f"  - Model confidence: {np.std(episode_values):.4f}")
+                
+                print(f"  Learning Progress:")
+                print(f"  - Episode length: {episode_length}")
+                rewards_trend = ""
+                if len(self.episode_rewards) > 1:
+                    if episode_reward > self.episode_rewards[-2]:
+                        rewards_trend = "↑ Improving"
+                    elif episode_reward < self.episode_rewards[-2]:
+                        rewards_trend = "↓ Declining"
+                    else:
+                        rewards_trend = "→ Stable"
+                print(f"  - Reward trend: {rewards_trend}")
+                
+                print(f"  Game Statistics:")
+                print(f"  - Lines cleared: {episode_stats['lines_cleared']}")
+                print(f"  - Tetris rate: {episode_stats['tetris_count'] / max(1, episode_stats['lines_cleared'] / 4):.2f}")
+                print(f"  - Garbage efficiency: {episode_stats['garbage_sent'] / max(1, total_blocks):.2f} lines/block")
+                print(f"  - Max combo: {episode_stats['max_combo']}")
+                
+                # Only show block distribution if significant number of blocks placed
+                if total_blocks > 5:
+                    print(f"  - Block efficiency:")
+                    for piece, count in episode_stats['blocks_placed'].items():
+                        percentage = (count / total_blocks * 100) if total_blocks > 0 else 0
+                        print(f"    {piece}: {count} ({percentage:.1f}%)")
+                
+                # Advanced metrics
+                print(f"  Advanced Metrics:")
+                print(f"  - Decision quality: {episode_reward / max(1, episode_length):.4f}")
+                print(f"  - Stack height control: {20 - episode_stats['max_height']:.1f}/20")
+                print(f"  - Special move rate: {(episode_stats['tspin_count'] + episode_stats['perfect_clears']) / max(1, total_blocks):.3f}")
+                print(f"  - Back-to-back efficiency: {episode_stats['back_to_back'] / max(1, episode_stats['tetris_count'] + episode_stats['tspin_count']):.2f} if applicable")
                 
                 # Reset episode metrics
                 episode_reward = 0
