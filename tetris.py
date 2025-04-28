@@ -73,8 +73,12 @@ class TetrisEngine:
         self.lines_cleared = 0
         self.level = 1
         self.game_over = False
-        self.piece_queue = list(TETROMINOS.keys())
-        random.shuffle(self.piece_queue)
+        
+        # Initialize 7-bag piece queue system with two bags for lookahead
+        self.piece_queue = []
+        self._refill_piece_queue()  # Fill the queue with the first 7-bag
+        self._refill_piece_queue()  # Add a second bag for more lookahead
+        
         self.current_piece = None
         self.current_piece_name = None
         self.current_pos = [0, 0] # [row, col]
@@ -96,6 +100,15 @@ class TetrisEngine:
         }
         
         self._spawn_piece()
+        
+    def _refill_piece_queue(self):
+        """
+        Add a new randomized 7-bag of pieces to the queue.
+        This ensures all 7 tetrominos appear exactly once before repeating.
+        """
+        new_bag = list(TETROMINOS.keys())  # Get all 7 tetromino types
+        random.shuffle(new_bag)  # Randomize their order
+        self.piece_queue.extend(new_bag)  # Add the new bag to the queue
 
     def _get_piece_coords(self, piece_name, rotation, position):
         piece_data = TETROMINOS[piece_name]
@@ -148,9 +161,9 @@ class TetrisEngine:
         return False
 
     def _spawn_piece(self):
-        if not self.piece_queue:
-            self.piece_queue = list(TETROMINOS.keys())
-            random.shuffle(self.piece_queue)
+        # Ensure we always have at least 7 pieces in the queue (one full bag)
+        if len(self.piece_queue) <= 7:
+            self._refill_piece_queue()  # Add a new 7-bag when we're getting low
 
         self.current_piece_name = self.piece_queue.pop(0)
         self.current_rotation = 0
